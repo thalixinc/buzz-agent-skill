@@ -1,0 +1,4 @@
+interface:
+  display_name: "Buzz CLI"
+  short_description: "Use Buzz safely from Codex or Claude Code"
+  default_prompt: "Use $buzz to inspect my Buzz workspace and complete the requested task."

@@ -1,0 +1,35 @@
+{
+  "name": "buzz-agent-skill",
+  "version": "0.1.0",
+  "description": "Install and update the Buzz CLI skill for Codex and Claude Code",
+  "type": "module",
+  "bin": {
+    "buzz-skill": "./bin/buzz-skill.mjs"
+  },
+  "files": [
+    "bin",
+    "skill"
+  ],
+  "scripts": {
+    "check": "node ./bin/buzz-skill.mjs check",
+    "install-skill": "node ./bin/buzz-skill.mjs install"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thalixinc/buzz-agent-skill.git"
+  },
+  "homepage": "https://github.com/thalixinc/buzz-agent-skill#readme",
+  "bugs": {
+    "url": "https://github.com/thalixinc/buzz-agent-skill/issues"
+  },
+  "keywords": [
+    "buzz",
+    "codex",
+    "claude-code",
+    "agent-skill"
+  ]
+}
