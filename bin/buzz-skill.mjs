@@ -159,8 +159,45 @@ function status() {
   };
 }
 
+function formatStatus(result) {
+  const lines = [
+    `Buzz Agent Skill v${result.package_version}`,
+    "",
+    `${result.cli.ok ? "✓" : "✗"} Buzz CLI${
+      result.cli.path ? `  ${result.cli.path}` : ""
+    }`,
+  ];
+
+  if (!result.cli.ok && result.cli.message) {
+    lines.push(`  ${result.cli.message}`);
+  }
+
+  lines.push("", "Agent skills");
+  for (const skill of result.skills) {
+    const ok = skill.installed && skill.managed;
+    const details = [
+      skill.installed ? "installed" : "not installed",
+      skill.managed ? "managed" : "not managed",
+      skill.version ? `v${skill.version}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    lines.push(
+      `${ok ? "✓" : "✗"} ${skill.agent.padEnd(7)} ${details}`,
+      `  ${skill.path}`,
+    );
+  }
+
+  const healthy =
+    result.cli.ok &&
+    result.skills.every((skill) => skill.installed && skill.managed);
+  lines.push("", healthy ? "Everything looks good." : "Some items need attention.");
+  return lines.join("\n");
+}
+
 const [command = "check", ...args] = process.argv.slice(2);
 const force = args.includes("--force");
+const json = args.includes("--json");
 
 try {
   if (command === "install" || command === "update") {
@@ -170,7 +207,7 @@ try {
     if (!result.cli.ok) process.exitCode = 1;
   } else if (command === "check") {
     const result = status();
-    console.log(JSON.stringify(result, null, 2));
+    console.log(json ? JSON.stringify(result, null, 2) : formatStatus(result));
     if (
       !result.cli.ok ||
       result.skills.some((skill) => !skill.installed || !skill.managed)
@@ -179,7 +216,7 @@ try {
     }
   } else {
     console.error(
-      "Usage: buzz-skill <install|update|check> [--force]",
+      "Usage: buzz-skill <install|update|check> [--force] [--json]",
     );
     process.exitCode = 1;
   }

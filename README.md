@@ -31,6 +31,12 @@ npx buzz-agent-skill check
 The check reports skill versions, CLI availability, and whether Buzz
 authentication variables are set. It never prints secret values.
 
+For machine-readable output:
+
+```bash
+npx buzz-agent-skill check --json
+```
+
 ## CLI installation
 
 Buzz Desktop includes the native CLI. On macOS, the installer maintains:
@@ -44,4 +50,3 @@ For source builds:
 ```bash
 cargo build --release -p buzz-cli
 ```
-
