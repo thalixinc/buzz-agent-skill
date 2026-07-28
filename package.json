@@ -4,7 +4,7 @@
   "description": "Install and update the Buzz CLI skill for Codex and Claude Code",
   "type": "module",
   "bin": {
-    "buzz-skill": "./bin/buzz-skill.mjs"
+    "buzz-skill": "bin/buzz-skill.mjs"
   },
   "files": [
     "bin",
