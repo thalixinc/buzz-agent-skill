@@ -20,9 +20,10 @@ import { fileURLToPath } from "node:url";
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sourceSkill = join(packageRoot, "skill", "buzz");
 const markerName = ".buzz-skill-package.json";
+const skillHome = process.env.BUZZ_SKILL_HOME || homedir();
 const targets = [
-  { agent: "codex", path: join(homedir(), ".codex", "skills", "buzz") },
-  { agent: "claude", path: join(homedir(), ".claude", "skills", "buzz") },
+  { agent: "codex", path: join(skillHome, ".codex", "skills", "buzz") },
+  { agent: "claude", path: join(skillHome, ".claude", "skills", "buzz") },
 ];
 
 function packageVersion() {
@@ -79,6 +80,20 @@ function installTarget({ agent, path }, force) {
   return { agent, path, version: packageVersion() };
 }
 
+function uninstallTarget({ agent, path }, force) {
+  if (!existsSync(path)) {
+    return { agent, path, removed: false, reason: "not installed" };
+  }
+  if (!marker(path) && !force) {
+    throw new Error(
+      `${agent}: ${path} is not managed by buzz-agent-skill; rerun with --force to remove it`,
+    );
+  }
+
+  rmSync(path, { recursive: true, force: true });
+  return { agent, path, removed: true };
+}
+
 function findBuzz() {
   try {
     return execFileSync(
@@ -98,7 +113,7 @@ function ensureMacCliLink() {
   const bundled = "/Applications/Buzz.app/Contents/MacOS/buzz";
   if (!existsSync(bundled)) return null;
 
-  const link = join(homedir(), ".local", "bin", "buzz");
+  const link = join(skillHome, ".local", "bin", "buzz");
   mkdirSync(dirname(link), { recursive: true });
   if (existsSync(link) || lstatExists(link)) {
     if (lstatSync(link).isSymbolicLink() && readlinkSync(link) === bundled) {
@@ -195,16 +210,85 @@ function formatStatus(result) {
   return lines.join("\n");
 }
 
+function formatChange(result) {
+  const verbs = {
+    install: "Installed",
+    update: "Updated",
+    uninstall: "Uninstalled",
+  };
+  const lines = [
+    `${verbs[result.action]} Buzz Agent Skill v${result.package_version}`,
+    "",
+  ];
+
+  for (const skill of result.skills) {
+    const changed =
+      result.action === "uninstall" ? skill.removed : Boolean(skill.version);
+    const detail = changed
+      ? result.action === "uninstall"
+        ? "removed"
+        : `v${skill.version}`
+      : skill.reason;
+    lines.push(
+      `${changed ? "✓" : "–"} ${skill.agent.padEnd(7)} ${detail}`,
+      `  ${skill.path}`,
+    );
+  }
+
+  if (result.cli) {
+    lines.push(
+      "",
+      `${result.cli.ok ? "✓" : "✗"} Buzz CLI${
+        result.cli.path ? `  ${result.cli.path}` : ""
+      }`,
+    );
+    if (!result.cli.ok && result.cli.message) {
+      lines.push(`  ${result.cli.message}`);
+    }
+  }
+
+  lines.push("", "Done.");
+  return lines.join("\n");
+}
+
+function usage() {
+  return [
+    "Buzz Agent Skill",
+    "",
+    "Usage:",
+    "  buzz-skill install [--force] [--json]",
+    "  buzz-skill update [--force] [--json]",
+    "  buzz-skill uninstall [--force] [--json]",
+    "  buzz-skill check [--json]",
+    "",
+    "Options:",
+    "  --force  Replace or remove skill folders not managed by this package",
+    "  --json   Print machine-readable JSON",
+    "  --help   Show this help",
+  ].join("\n");
+}
+
 const [command = "check", ...args] = process.argv.slice(2);
 const force = args.includes("--force");
 const json = args.includes("--json");
 
 try {
   if (command === "install" || command === "update") {
-    const installed = targets.map((target) => installTarget(target, force));
-    const result = { installed, cli: cliStatus() };
-    console.log(JSON.stringify(result, null, 2));
+    const result = {
+      action: command,
+      package_version: packageVersion(),
+      skills: targets.map((target) => installTarget(target, force)),
+      cli: cliStatus(),
+    };
+    console.log(json ? JSON.stringify(result, null, 2) : formatChange(result));
     if (!result.cli.ok) process.exitCode = 1;
+  } else if (command === "uninstall") {
+    const result = {
+      action: command,
+      package_version: packageVersion(),
+      skills: targets.map((target) => uninstallTarget(target, force)),
+    };
+    console.log(json ? JSON.stringify(result, null, 2) : formatChange(result));
   } else if (command === "check") {
     const result = status();
     console.log(json ? JSON.stringify(result, null, 2) : formatStatus(result));
@@ -214,18 +298,18 @@ try {
     ) {
       process.exitCode = 1;
     }
+  } else if (command === "help" || command === "--help" || command === "-h") {
+    console.log(usage());
   } else {
-    console.error(
-      "Usage: buzz-skill <install|update|check> [--force] [--json]",
-    );
+    console.error(usage());
     process.exitCode = 1;
   }
 } catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
   console.error(
-    JSON.stringify({
-      ok: false,
-      error: error instanceof Error ? error.message : String(error),
-    }),
+    json
+      ? JSON.stringify({ ok: false, command, error: message }, null, 2)
+      : `✗ ${command} failed\n\n${message}`,
   );
   process.exitCode = 1;
 }

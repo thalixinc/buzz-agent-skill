@@ -1,6 +1,6 @@
 {
   "name": "buzz-agent-skill",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Install and update the Buzz CLI skill for Codex and Claude Code",
   "type": "module",
   "bin": {
@@ -12,7 +12,8 @@
   ],
   "scripts": {
     "check": "node ./bin/buzz-skill.mjs check",
-    "install-skill": "node ./bin/buzz-skill.mjs install"
+    "install-skill": "node ./bin/buzz-skill.mjs install",
+    "uninstall-skill": "node ./bin/buzz-skill.mjs uninstall"
   },
   "engines": {
     "node": ">=20"

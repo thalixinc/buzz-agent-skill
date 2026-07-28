@@ -8,7 +8,7 @@ Buzz Desktop or a source installation, so updating Buzz also updates the CLI.
 ## Install
 
 ```bash
-npx buzz-agent-skill install
+npx buzz-agent-skill@latest install
 ```
 
 This installs the skill into:
@@ -22,19 +22,27 @@ This installs the skill into:
 npx buzz-agent-skill@latest update
 ```
 
+## Uninstall
+
+```bash
+npx buzz-agent-skill@latest uninstall
+```
+
 ## Check
 
 ```bash
-npx buzz-agent-skill check
+npx buzz-agent-skill@latest check
 ```
 
-The check reports skill versions, CLI availability, and whether Buzz
-authentication variables are set. It never prints secret values.
+Commands print a concise, human-readable summary by default.
 
-For machine-readable output:
+Add `--json` to any command for machine-readable output:
 
 ```bash
-npx buzz-agent-skill check --json
+npx buzz-agent-skill@latest install --json
+npx buzz-agent-skill@latest update --json
+npx buzz-agent-skill@latest uninstall --json
+npx buzz-agent-skill@latest check --json
 ```
 
 ## CLI installation
